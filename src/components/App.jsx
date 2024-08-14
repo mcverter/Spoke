@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import React, { useState } from "react";
-import { ThemeProvider } from "@material-ui/core/styles";
-import { createTheme } from "@material-ui/core/styles";
+import { ThemeProvider, createTheme } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 
 import { defaultTheme } from "../styles/mui-theme";
@@ -30,7 +29,7 @@ const App = ({ children }) => {
   }
   const handleSetTheme = newPalette => {
     if (newPalette === undefined) {
-      // happpens when OrganizationWrapper unmounts
+      // happens when OrganizationWrapper unmounts
       setTheme(defaultTheme);
     } else {
       try {
@@ -46,7 +45,7 @@ const App = ({ children }) => {
     <ThemeContext.Provider value={{ muiTheme, setTheme: handleSetTheme }}>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <div styles={{ height: "100%" }}>{children}</div>
+        <div style={{ height: "100%" }}>{children}</div>
       </ThemeProvider>
     </ThemeContext.Provider>
   );
