@@ -17,6 +17,7 @@ function getComponents() {
           "texter-feedback",
           "contact-notes"
         ];
+  console.log('hello')
   const components = {};
   enabledComponents.forEach(componentName => {
     try {
@@ -47,6 +48,7 @@ export const getSideboxes = (
   },
   context
 ) => {
+  console.log('helo worlds')
   const popups = [];
   const enabledSideboxes = (
     (campaign &&
