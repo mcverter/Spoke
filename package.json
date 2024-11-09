@@ -159,6 +159,7 @@
     "pg": "^8.12.0",
     "pg-connection-string": "^2.6.4",
     "pg-query-stream": "^4.6.0",
+    "process": "^0.11.10",
     "prop-types": "^15.6.0",
     "query-string": "^9.0.0",
     "react": "16.14.0",

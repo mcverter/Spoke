@@ -10,6 +10,7 @@ import GSFormField from "./GSFormField";
 
 export default class GSSelectField extends GSFormField {
   createMenuItems() {
+    console.log('ch')
     return this.props.choices.map(({ value, label }) => (
       <MenuItem value={value} key={value}>
         {label}

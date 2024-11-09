@@ -9,12 +9,19 @@ import Button from "@material-ui/core/Button";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
 
-import GSIntegerField from "../../../components/forms/GSIntegerField"
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import GSIntegerField from "../../../components/forms/GSIntegerField";
 import GSTextField from "../../../components/forms/GSTextField";
 import loadData from "../../../containers/hoc/load-data";
+import { getDynamicAssignmentBatchPolicies } from "../../dynamicassignment-batches";
+import { getHighestRole, ROLE_HIERARCHY } from "../../../lib";
+import { dataTest } from "../../../lib/attributes";
+import GSSelectField from "../../../components/forms/GSSelectField";
 
 export const displayName = () => "Take conversations";
 
+// const BatchTypeOptions = process.env.DYNAMICASSIGNMENT_BATCHES.split(',')
 export const showSidebox = ({ contact, currentUser, settingsData }) => {
   // Return anything False-y to not show
   // Return anything Truth-y to show
@@ -85,6 +92,7 @@ export class TexterSideboxClass extends React.Component {
     const headerStyle = messageStatusFilter ? { textAlign: "center" } : {};
     const batchSize =
       settingsData.takeConversationsBatchSize || campaign.batchSize;
+
     return (
       <div style={headerStyle}>
         <div>
@@ -94,7 +102,11 @@ export class TexterSideboxClass extends React.Component {
             color="primary"
             onClick={this.requestNewContacts}
           >
-            Take a batch of {batchSize} conversations
+            Take a batch of
+            {" "}
+            {batchSize}
+            {" "}
+            conversations
           </Button>
         </div>
       </div>
@@ -118,8 +130,10 @@ TexterSideboxClass.propTypes = {
 };
 
 export const mutations = {
-  findNewCampaignContact: ownProps => batchType => ({
-    mutation: gql`
+  findNewCampaignContact: ownProps => batchType => {
+    console.log("own props", ownProps);
+    return ({
+      mutation: gql`
       mutation findNewCampaignContact(
         $assignmentId: String!
         $numberContacts: Int!
@@ -138,15 +152,18 @@ export const mutations = {
         }
       }
     `,
-    variables: {
-      assignmentId: ownProps.assignment.id,
-      numberContacts: ownProps.settingsData.takeConversationsBatchSize || 20,
-      batchType:
-        batchType ||
-        ownProps.settingsData.takeConversationsBatchType ||
-        "vetted-takeconversations"
-    }
-  })
+      variables: {
+        assignmentId: ownProps.assignment.id,
+        numberContacts: ownProps.settingsData.takeConversationsBatchSize || 20,
+        batchType:
+                  "foo" ||
+
+          batchType ||
+          ownProps.settingsData.takeConversationsBatchType ||
+          "vetted-takeconversations"
+      }
+    });
+  }
 };
 
 export const TexterSidebox = loadData({ mutations })(
@@ -164,13 +181,53 @@ export const adminSchema = () => ({
   takeConversationsBatchSize: yup.number().integer()
 });
 
+function RolesDropdown(props) {
+  return (
+    <Select
+      value={getHighestRole(props.roles)}
+      disabled={
+        props.texterId === props.currentUser.id ||
+        (getHighestRole(props.roles) === "OWNER" &&
+          getHighestRole(props.currentUser.roles) !== "OWNER")
+      }
+      onChange={event => {
+        return props.onChange(props.texterId, event.target.value);
+      }}
+    >
+      {ROLE_HIERARCHY.map(option => (
+        <MenuItem
+          key={`${props.texterId}_${option}`}
+          value={option}
+          disabled={
+            option === "OWNER" &&
+            getHighestRole(props.currentUser.roles) !== "OWNER"
+          }
+        >
+          {option.charAt(0).toUpperCase()}
+          {option
+            .substring(1)
+            .replace("_", " ")
+            .toLowerCase()}
+        </MenuItem>
+      ))}
+    </Select>
+  );
+}
+
+
 export class AdminConfig extends React.Component {
   componentDidMount() {
     const { settingsData } = this.props;
+    console.log("proops", this.props);
     // set defaults
     const defaults = {};
     if (!settingsData.takeConversationsBatchType) {
-      defaults.takeConversationsBatchType = "vetted-takeconversations";
+      defaults.takeConversationsBatchType = ["finished-replies-tz",
+        "vetted-texters",
+        "finished-replies"
+      ];
+      // "vetted-takeconversations";
+
     }
     if (!settingsData.takeConversationsBatchSize) {
       defaults.takeConversationsBatchSize = 20;
@@ -181,6 +238,10 @@ export class AdminConfig extends React.Component {
   }
 
   render() {
+    console.log("oh no not again");
+    const { organization, campaign } = this.props;
+    const options = [{ value: "foo", label: "foo" }, { value: "bar", label: "bar" }, { value: "moo", label: "moo" }];
+
     return (
       <div>
         <p>
@@ -188,6 +249,26 @@ export class AdminConfig extends React.Component {
           (enable vetted-takeconversations with Ctrl-selecting it as a second
           option in the campaign Dynamic Assignment panel)
         </p>
+        <GSSelectField
+          style={{ width: "90%" }}
+          label="Action handler"
+          name="answerActions"
+          value="foo"
+          onChange={val => {console.log(val)}}
+          choices={[{value: "dowdy", label: "dowdy"}, {value: 'foo', label: 'foo'}, {value: 'bar', label: 'bar'}, {value: 'moo', label: 'moo'}]}
+        />
+
+        <Form.Field
+          name="takeConversationsBatchType"
+          label="Batch Type"
+          as={GSSelectField}
+          value="foo"
+          onChange={val => {console.log(val)}}
+          choices={[{value: "howdy", label: "doody"}, {value: 'foo', label: 'foo'}, {value: 'bar', label: 'bar'}, {value: 'moo', label: 'moo'}]}
+          fullWidth
+        />
+        {/*
+        "options": "{\"default-dynamicassignment\":true,\"default-releasecontacts\":true,\"default-editinitial\":true,\"dynamicAssignmentRequestMoreLabel\":\"Send more texts\",\"dynamicAssignmentRequestMoreMessage\":\"Finished sending all your messages, and want to send more?\",\"releaseContactsBatchTitle\":\"Can't send the rest of these texts?\",\"releaseContactsBatchLabel\":\"Done for the day\",\"releaseContactsConvosTitle\":\"Need to give up?\",\"releaseContactsConvosLabel\":\"Release all my contacts\",\"editInitialExpandText\":\"Sending Initial Messages\",\"editInitialMessagePre\":\"It's important to follow all training materials and campaign manager guidance while texting. Please don't\",\"editInitialLinkText\":\"change the initial script\",\"editInitialMessagePost\":\"unless instructed by your campaign administrator.  Making changes may flag your account for admins.\",\"take-conversations\":true,\"takeConversationsBatchType\":\"vetted-takeconversations\",\"takeConversationsBatchSize\":50,\"texter-feedback\":false}",
         <Form.Field
           as={GSTextField}
           name="takeConversationsBatchType"
@@ -195,6 +276,7 @@ export class AdminConfig extends React.Component {
           fullWidth
           hintText=""
         />
+        */}
         <p>If batchsize is set to 0 it will stop showing this side panel</p>
         <Form.Field
           as={GSIntegerField}
@@ -212,7 +294,7 @@ export class AdminConfig extends React.Component {
           that reply.
         </p>
         <FormControlLabel
-          control={
+          control={(
             <Switch
               color="primary"
               checked={
@@ -226,7 +308,7 @@ export class AdminConfig extends React.Component {
                 );
               }}
             />
-          }
+          )}
           label="Enable initial outbound unassign"
           labelPlacement="start"
         />
